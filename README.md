@@ -159,15 +159,16 @@ Flask-Migrate
 python-dotenv
 ```
 
+Depois de adicionar ou alterar as dependências, instale novamente:
+
+```bash
+pip install -r requirements.txt
+```
+
+Crie o arquivo `.env` e cole o código abaixo:
 
 ```.env
 SECRET_KEY=your_secret_key
 DEBUG=True
 DATABASE_URL=sqlite:///db.sqlite3
-```
-
-Depois de adicionar ou alterar as dependências, instale novamente:
-
-```bash
-pip install -r requirements.txt
 ```
