@@ -1,0 +1,27 @@
+# Python
+*.pyc
+*.pyo
+__pycache__/
+
+# Ambiente virtual
+venv/
+env/
+
+# Arquivos de configuração sensíveis
+.env
+
+# Arquivos de log
+*.log
+
+# Diretórios e arquivos específicos do Flask
+instance/
+migrations/
+
+# IDEs e editores
+.vscode/
+.idea/
+
+# Dependências do projeto
+*.egg-info/
+dist/
+build/
