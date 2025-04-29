@@ -18,7 +18,7 @@ Antes de começar, certifique-se de que você tem as seguintes ferramentas insta
 Clone este repositório para sua máquina local:
 
 ```bash
-git clone https://github.com/seu-usuario/projeto_basquete.git
+https://github.com/juliomonteiiro/projetopythonturatti.git
 cd projeto_basquete
 ```
 
