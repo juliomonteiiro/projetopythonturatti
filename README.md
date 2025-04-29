@@ -142,7 +142,7 @@ Se você quiser contribuir com o projeto, siga estas etapas:
 
 1. Faça um **fork** deste repositório.
 2. Crie uma **nova branch** para suas alterações.
-3. Faça suas alterações e envie um **pull request** para a branch `master`.
+3. Faça suas alterações e envie um **pull request** para a branch `main`.
 
 ## Licença
 
@@ -157,6 +157,13 @@ Flask
 Flask-SQLAlchemy
 Flask-Migrate
 python-dotenv
+```
+
+
+```.env
+SECRET_KEY=your_secret_key
+DEBUG=True
+DATABASE_URL=sqlite:///db.sqlite3
 ```
 
 Depois de adicionar ou alterar as dependências, instale novamente:
