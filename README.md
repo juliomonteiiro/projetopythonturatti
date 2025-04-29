@@ -19,7 +19,7 @@ Clone este repositório para sua máquina local:
 
 ```bash
 https://github.com/juliomonteiiro/projetopythonturatti.git
-cd projeto_basquete
+cd projetopythonturatti
 ```
 
 ### 2. Crie um ambiente virtual
