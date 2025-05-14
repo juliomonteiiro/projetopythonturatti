@@ -18,7 +18,7 @@ Antes de começar, certifique-se de que você tem as seguintes ferramentas insta
 Clone este repositório para sua máquina local:
 
 ```bash
-https://github.com/juliomonteiiro/projetopythonturatti.git
+git clone https://github.com/juliomonteiiro/projetopythonturatti.git
 cd projetopythonturatti
 ```
 
