@@ -18,8 +18,8 @@ Antes de começar, certifique-se de que você tem as seguintes ferramentas insta
 Clone este repositório para sua máquina local:
 
 ```bash
-git clone https://github.com/seu-usuario/projeto_basquete.git
-cd projeto_basquete
+git clone https://github.com/juliomonteiiro/projetopythonturatti.git
+cd projetopythonturatti
 ```
 
 ### 2. Crie um ambiente virtual
@@ -142,7 +142,7 @@ Se você quiser contribuir com o projeto, siga estas etapas:
 
 1. Faça um **fork** deste repositório.
 2. Crie uma **nova branch** para suas alterações.
-3. Faça suas alterações e envie um **pull request** para a branch `master`.
+3. Faça suas alterações e envie um **pull request** para a branch `main`.
 
 ## Licença
 
@@ -163,4 +163,12 @@ Depois de adicionar ou alterar as dependências, instale novamente:
 
 ```bash
 pip install -r requirements.txt
+```
+
+Crie o arquivo `.env` e cole o código abaixo:
+
+```.env
+SECRET_KEY=your_secret_key
+DEBUG=True
+DATABASE_URL=sqlite:///db.sqlite3
 ```
