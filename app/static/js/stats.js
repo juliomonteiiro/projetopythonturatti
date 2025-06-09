@@ -216,6 +216,7 @@ function updatePlayerInfo(player) {
         emptyState.classList.add('hidden');
     }
     
+    // Set current player ID and load stats
     currentPlayerId = player.id;
     loadPlayerStats(player.id);
 }
@@ -232,7 +233,6 @@ async function loadPlayerStats(playerId) {
         
         const stats = await response.json();
         updateStatsTable(stats);
-        updatePlayerAverages(stats);
         
         if (playerStatsSection) {
             playerStatsSection.classList.remove('hidden');
@@ -244,42 +244,6 @@ async function loadPlayerStats(playerId) {
             playerStatsSection.classList.add('hidden');
         }
     }
-}
-
-function updatePlayerAverages(stats) {
-    if (!Array.isArray(stats) || stats.length === 0) {
-        document.getElementById('last-pts').textContent = '-';
-        document.getElementById('last-reb').textContent = '-';
-        document.getElementById('last-ast').textContent = '-';
-        document.getElementById('last-stl').textContent = '-';
-        document.getElementById('last-blk').textContent = '-';
-        
-        document.getElementById('avg-pts').textContent = '-';
-        document.getElementById('avg-reb').textContent = '-';
-        document.getElementById('avg-ast').textContent = '-';
-        document.getElementById('avg-stl').textContent = '-';
-        document.getElementById('avg-blk').textContent = '-';
-        return;
-    }
-
-    const lastGame = stats[0];
-    document.getElementById('last-pts').textContent = lastGame.points || '0';
-    document.getElementById('last-reb').textContent = lastGame.rebounds || '0';
-    document.getElementById('last-ast').textContent = lastGame.assists || '0';
-    document.getElementById('last-stl').textContent = lastGame.steals || '0';
-    document.getElementById('last-blk').textContent = lastGame.blocks || '0';
-
-    const avgPoints = (stats.reduce((sum, stat) => sum + (stat.points || 0), 0) / stats.length).toFixed(1);
-    const avgRebounds = (stats.reduce((sum, stat) => sum + (stat.rebounds || 0), 0) / stats.length).toFixed(1);
-    const avgAssists = (stats.reduce((sum, stat) => sum + (stat.assists || 0), 0) / stats.length).toFixed(1);
-    const avgSteals = (stats.reduce((sum, stat) => sum + (stat.steals || 0), 0) / stats.length).toFixed(1);
-    const avgBlocks = (stats.reduce((sum, stat) => sum + (stat.blocks || 0), 0) / stats.length).toFixed(1);
-
-    document.getElementById('avg-pts').textContent = avgPoints;
-    document.getElementById('avg-reb').textContent = avgRebounds;
-    document.getElementById('avg-ast').textContent = avgAssists;
-    document.getElementById('avg-stl').textContent = avgSteals;
-    document.getElementById('avg-blk').textContent = avgBlocks;
 }
 
 function updateStatsTable(stats) {
@@ -309,18 +273,19 @@ function updateStatsTable(stats) {
     
     stats.forEach(stat => {
         const row = document.createElement('tr');
-        row.className = 'hover:bg-white/5 transition cursor-pointer';
+        row.className = 'hover:bg-white/5 transition';
         row.id = `stat-${stat.id}`;
+        
+        const fgPct = calculatePercentage(stat.field_goals_made, stat.field_goals_attempted);
+        const threePtPct = calculatePercentage(stat.three_points_made, stat.three_points_attempted);
+        const ftPct = calculatePercentage(stat.free_throws_made, stat.free_throws_attempted);
         
         row.innerHTML = `
             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-white">
-                <div class="flex flex-col">
-                    <span class="font-semibold">${formatDate(stat.game_date)}</span>
-                    <span class="text-xs text-gray-400">vs ${stat.adverse_team}</span>
-                </div>
+                ${formatDate(stat.game_date)}
             </td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-center text-white">
-                <span class="font-bold text-lg">${stat.points || '0'}</span>
+                ${stat.points || '0'}
             </td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-center text-white">
                 ${stat.rebounds || '0'}
@@ -336,13 +301,7 @@ function updateStatsTable(stats) {
             </td>
             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                 <div class="flex items-center justify-center space-x-2">
-                    <button onclick="viewStatDetails('${stat.id}')" class="text-blue-500 hover:text-blue-400 p-1.5 rounded-full hover:bg-blue-500/10 transition-colors" title="Ver detalhes">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                        </svg>
-                    </button>
-                    <button onclick="editStat('${stat.id}')" class="text-yellow-500 hover:text-yellow-400 p-1.5 rounded-full hover:bg-yellow-500/10 transition-colors" title="Editar">
+                    <button onclick="editStat('${stat.id}')" class="text-blue-500 hover:text-blue-400 p-1.5 rounded-full hover:bg-blue-500/10 transition-colors" title="Editar">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                         </svg>
@@ -365,11 +324,13 @@ function formatDate(dateString) {
     return new Date(dateString).toLocaleDateString('pt-BR', options);
 }
 
+// Calculate percentage
 function calculatePercentage(made, attempted) {
     if (!attempted || isNaN(made) || isNaN(attempted)) return '0.0';
     return (made / attempted * 100).toFixed(1);
 }
 
+// Calculate total points
 function calculateTotalPoints() {
     const fieldGoalsMade = parseInt(document.getElementById('field_goals_made')?.value) || 0;
     const threePointsMade = parseInt(document.getElementById('three_points_made')?.value) || 0;
@@ -385,6 +346,7 @@ function calculateTotalPoints() {
     return points;
 }
 
+// Update percentage field and points
 function updatePercentage(madeId, attemptedId, percentageId) {
     const madeElement = document.getElementById(madeId);
     const attemptedElement = document.getElementById(attemptedId);
@@ -405,6 +367,7 @@ function updatePercentage(madeId, attemptedId, percentageId) {
     calculateTotalPoints();
 }
 
+// Validate that 3-pointers don't exceed total field goals
 function validateThreePointers() {
     const threePointsMade = parseInt(document.getElementById('three_points_made')?.value) || 0;
     const fieldGoalsMade = parseInt(document.getElementById('field_goals_made')?.value) || 0;
@@ -415,6 +378,7 @@ function validateThreePointers() {
     }
 }
 
+// Set up event listeners for percentage calculation
 function setupPercentageListeners() {
     const percentageFields = [
         { made: 'field_goals_made', attempted: 'field_goals_attempted', percentage: 'field_goals_percentage' },
@@ -440,6 +404,7 @@ function setupPercentageListeners() {
         }
     });
     
+    // Free throws
     const ftMade = document.getElementById('free_throws_made');
     const ftAttempted = document.getElementById('free_throws_attempted');
     
@@ -449,7 +414,9 @@ function setupPercentageListeners() {
     }
 }
 
+// Set up event listeners
 function setupEventListeners() {
+    // Handle ESC key to close modals
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape') {
             const addModal = document.getElementById('add-stats-modal');
@@ -463,6 +430,7 @@ function setupEventListeners() {
         }
     });
     
+    // Player select change
     const playerSelect = document.getElementById('player-select');
     const playerSelectMobile = document.getElementById('player-select-mobile');
     const addStatsBtn = document.getElementById('add-stats-btn');
@@ -475,6 +443,7 @@ function setupEventListeners() {
         playerSelectMobile.addEventListener('change', handlePlayerSelect);
     }
     
+    // Add stats button click
     if (addStatsBtn) {
         addStatsBtn.addEventListener('click', () => {
             const playerSelect = document.getElementById('player-select');
@@ -486,15 +455,18 @@ function setupEventListeners() {
         });
     }
     
+    // Form submission
     if (statsForm) {
         statsForm.addEventListener('submit', handleFormSubmit);
     }
     
+    // Modal close buttons
     const closeButtons = document.querySelectorAll('.modal-close');
     closeButtons.forEach(button => {
         button.addEventListener('click', hideAddModal);
     });
     
+    // Close modals when clicking outside
     const addModal = document.getElementById('add-stats-modal');
     const deleteModal = document.getElementById('delete-modal');
     
@@ -505,6 +477,7 @@ function setupEventListeners() {
             }
         });
         
+        // Add ARIA attributes for accessibility
         addModal.setAttribute('role', 'dialog');
         addModal.setAttribute('aria-modal', 'true');
         addModal.setAttribute('aria-labelledby', 'add-stats-title');
@@ -517,31 +490,37 @@ function setupEventListeners() {
             }
         });
         
+        // Add ARIA attributes for accessibility
         deleteModal.setAttribute('role', 'alertdialog');
         deleteModal.setAttribute('aria-modal', 'true');
         deleteModal.setAttribute('aria-labelledby', 'delete-modal-title');
     }
     
+    // Delete confirmation
     const deleteConfirmBtn = document.getElementById('confirm-delete');
     if (deleteConfirmBtn) {
         deleteConfirmBtn.addEventListener('click', handleDeleteConfirm);
     }
     
+    // Cancel delete button
     const cancelDeleteBtn = document.getElementById('cancel-delete');
     if (cancelDeleteBtn) {
         cancelDeleteBtn.addEventListener('click', hideDeleteModal);
     }
     
+    // Cancel stats button
     const cancelStatsBtn = document.getElementById('cancel-stats');
     if (cancelStatsBtn) {
         cancelStatsBtn.addEventListener('click', hideAddModal);
     }
 }
 
+// Handle player select change
 function handlePlayerSelect(event) {
     const select = event.target;
     const selectedOption = select.options[select.selectedIndex];
     
+    // Update the other select to match
     const otherSelect = select.id === 'player-select' 
         ? document.getElementById('player-select-mobile') 
         : document.getElementById('player-select');
@@ -550,7 +529,9 @@ function handlePlayerSelect(event) {
         otherSelect.value = selectedOption ? selectedOption.value : '';
     }
     
+    // If no player is selected, clear the UI
     if (!selectedOption || !selectedOption.value) {
+        // Reset player info
         updatePlayerInfo({
             id: null,
             name: 'Selecione um jogador',
@@ -561,11 +542,13 @@ function handlePlayerSelect(event) {
             team_secondary_color: ''
         });
         
+        // Hide stats section
         const playerStatsSection = document.getElementById('player-stats-section');
         if (playerStatsSection) {
             playerStatsSection.classList.add('hidden');
         }
         
+        // Show empty state
         const emptyState = document.getElementById('empty-stats-state');
         if (emptyState) {
             emptyState.classList.add('hidden');
@@ -574,6 +557,7 @@ function handlePlayerSelect(event) {
         return;
     }
     
+    // Update player info
     const player = {
         id: selectedOption.value,
         name: selectedOption.text.split(' - ').slice(1).join(' - ').trim(),
@@ -588,6 +572,8 @@ function handlePlayerSelect(event) {
     loadPlayerStats(player.id);
 }
 
+// Handle form submission
+// Validate form field
 function validateField(fieldId, errorId, validationFn) {
     const field = document.getElementById(fieldId);
     const errorElement = document.getElementById(errorId);
@@ -609,9 +595,11 @@ function validateField(fieldId, errorId, validationFn) {
     }
 }
 
+// Validate all form fields
 function validateForm() {
     let isValid = true;
     
+    // Validate required fields
     isValid = validateField('adverse_team', 'adverse_team_error', value => value.trim() !== '') && isValid;
     isValid = validateField('minutes_played', 'minutes_played_error', value => {
         const num = parseInt(value);
@@ -624,7 +612,9 @@ function validateForm() {
 async function handleFormSubmit(e) {
     e.preventDefault();
     
+    // Validate form
     if (!validateForm()) {
+        // Scroll to first error
         const firstError = document.querySelector('.border-red-500');
         if (firstError) {
             firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -632,14 +622,17 @@ async function handleFormSubmit(e) {
         return;
     }
     
+    // Get player ID from form
     const playerIdInput = document.getElementById('player_id');
     if (!playerIdInput || !playerIdInput.value) {
         alert('Por favor, selecione um jogador primeiro.');
         return;
     }
     
+    // Ensure currentPlayerId is set
     currentPlayerId = playerIdInput.value;
     
+    // Show loading state
     const submitBtn = document.getElementById('submitBtn');
     const submitText = document.getElementById('submitText');
     const submitLoader = document.getElementById('submitLoader');
@@ -649,13 +642,16 @@ async function handleFormSubmit(e) {
     if (submitLoader) submitLoader.classList.remove('hidden');
     
     try {
+        // Get form data
         const formData = new FormData(statsForm);
         const data = {};
         
+        // Add player_id to form data if not present
         if (!formData.has('player_id') && currentPlayerId) {
             formData.append('player_id', currentPlayerId);
         }
         
+        // Convert FormData to object and validate required fields
         const requiredFields = [
             'game_date', 'adverse_team', 'minutes_played', 
             'field_goals_made', 'field_goals_attempted', 
@@ -665,6 +661,7 @@ async function handleFormSubmit(e) {
             'turnovers', 'fouls'
         ];
         
+        // Validate all required fields
         const missingFields = [];
         requiredFields.forEach(field => {
             const value = formData.get(field) || '';
@@ -675,10 +672,12 @@ async function handleFormSubmit(e) {
             }
         });
         
+        // Check for missing fields
         if (missingFields.length > 0) {
             throw new Error(`Os seguintes campos são obrigatórios: ${missingFields.join(', ')}`);
         }
         
+        // Validate numeric values
         const fgMade = parseInt(data.field_goals_made);
         const fgAttempted = parseInt(data.field_goals_attempted);
         const threeMade = parseInt(data.three_points_made);
@@ -698,20 +697,26 @@ async function handleFormSubmit(e) {
             throw new Error('Lances livres convertidos não podem ser maiores que tentados');
         }
         
+        // Calculate points based on stats
         data.points = (fgMade * 2) + (threeMade * 1) + ftMade;
         
+        // Add player ID to data
         data.player_id = playerIdInput.value;
         
+        // Add player ID
         data.player_id = currentPlayerId;
         
+        // Log data being sent for debugging
         console.log('Enviando dados para o servidor:', data);
         
+        // Determine if we're creating or updating
         const url = currentStatId 
             ? `/api/player-stats/${currentStatId}`
             : '/api/player-stats';
             
         const method = currentStatId ? 'PUT' : 'POST';
         
+        // Send request
         const response = await fetch(url, {
             method,
             headers: {
@@ -721,6 +726,7 @@ async function handleFormSubmit(e) {
             body: JSON.stringify(data)
         });
         
+        // Log response for debugging
         console.log('Resposta do servidor:', response);
         
         if (!response.ok) {
@@ -728,16 +734,20 @@ async function handleFormSubmit(e) {
             throw new Error(error.message || 'Error saving stats');
         }
         
+        // Reload stats
         await loadPlayerStats(currentPlayerId);
         
+        // Hide modal and reset form
         hideAddModal();
         
+        // Show success message
         alert(`Stats ${currentStatId ? 'updated' : 'added'} successfully!`);
         
     } catch (error) {
         console.error('Error saving stats:', error);
         alert(error.message || 'Error saving stats. Please try again.');
     } finally {
+        // Reset button state
         if (submitBtn) {
             submitBtn.disabled = false;
             if (submitText) submitText.classList.remove('hidden');
@@ -746,214 +756,29 @@ async function handleFormSubmit(e) {
     }
 }
 
-async function viewStatDetails(statId) {
-    try {
-        const response = await fetch(`/api/player-stats/${currentPlayerId}`);
-        if (!response.ok) throw new Error('Erro ao carregar estatísticas');
-        
-        const stats = await response.json();
-        const stat = stats.find(s => s.id == statId);
-        
-        if (!stat) {
-            alert('Estatística não encontrada');
-            return;
-        }
-        
-        const modal = document.createElement('div');
-        modal.className = 'fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4';
-        modal.innerHTML = `
-            <div class="bg-gray-900/95 border border-gray-700/50 rounded-2xl w-full max-w-4xl mx-4 overflow-hidden transform transition-all duration-300 shadow-2xl">
-                <div class="px-6 pt-6 pb-4 border-b border-gray-800">
-                    <div class="flex justify-between items-center">
-                        <h3 class="text-2xl font-bold text-white">Detalhes da Partida</h3>
-                        <button onclick="this.closest('.fixed').remove()" class="text-gray-400 hover:text-white transition-colors p-1">
-                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                            </svg>
-                        </button>
-                    </div>
-                    <p class="text-gray-400 mt-1">${formatDate(stat.game_date)} vs ${stat.adverse_team}</p>
-                </div>
-                
-                <div class="p-6 max-h-[70vh] overflow-y-auto">
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        <!-- Pontuação -->
-                        <div class="bg-gray-800/60 p-5 rounded-xl border border-gray-700/50">
-                            <h4 class="text-gray-400 text-sm font-medium uppercase tracking-wider mb-4">Pontuação</h4>
-                            <div class="space-y-3">
-                                <div class="flex justify-between items-center">
-                                    <span class="text-gray-300">Total de Pontos</span>
-                                    <span class="text-white font-bold text-xl">${stat.points || 0}</span>
-                                </div>
-                                <div class="flex justify-between items-center">
-                                    <span class="text-gray-300">Minutos Jogados</span>
-                                    <span class="text-white font-medium">${stat.minutes_played || 0}</span>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <!-- Arremessos de Quadra -->
-                        <div class="bg-gray-800/60 p-5 rounded-xl border border-gray-700/50">
-                            <h4 class="text-gray-400 text-sm font-medium uppercase tracking-wider mb-4">Arremessos de Quadra</h4>
-                            <div class="space-y-3">
-                                <div class="flex justify-between items-center">
-                                    <span class="text-gray-300">Convertidos/Tentados</span>
-                                    <span class="text-white font-medium">${stat.field_goals_made || 0}/${stat.field_goals_attempted || 0}</span>
-                                </div>
-                                <div class="flex justify-between items-center">
-                                    <span class="text-gray-300">Porcentagem</span>
-                                    <span class="text-white font-bold">${stat.field_goal_percentage || 0}%</span>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <!-- Arremessos de 3 Pontos -->
-                        <div class="bg-gray-800/60 p-5 rounded-xl border border-gray-700/50">
-                            <h4 class="text-gray-400 text-sm font-medium uppercase tracking-wider mb-4">Arremessos de 3 Pontos</h4>
-                            <div class="space-y-3">
-                                <div class="flex justify-between items-center">
-                                    <span class="text-gray-300">Convertidos/Tentados</span>
-                                    <span class="text-white font-medium">${stat.three_points_made || 0}/${stat.three_points_attempted || 0}</span>
-                                </div>
-                                <div class="flex justify-between items-center">
-                                    <span class="text-gray-300">Porcentagem</span>
-                                    <span class="text-white font-bold">${stat.three_point_percentage || 0}%</span>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <!-- Lances Livres -->
-                        <div class="bg-gray-800/60 p-5 rounded-xl border border-gray-700/50">
-                            <h4 class="text-gray-400 text-sm font-medium uppercase tracking-wider mb-4">Lances Livres</h4>
-                            <div class="space-y-3">
-                                <div class="flex justify-between items-center">
-                                    <span class="text-gray-300">Convertidos/Tentados</span>
-                                    <span class="text-white font-medium">${stat.free_throws_made || 0}/${stat.free_throws_attempted || 0}</span>
-                                </div>
-                                <div class="flex justify-between items-center">
-                                    <span class="text-gray-300">Porcentagem</span>
-                                    <span class="text-white font-bold">${stat.free_throw_percentage || 0}%</span>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <!-- Outras Estatísticas -->
-                        <div class="bg-gray-800/60 p-5 rounded-xl border border-gray-700/50">
-                            <h4 class="text-gray-400 text-sm font-medium uppercase tracking-wider mb-4">Outras Estatísticas</h4>
-                            <div class="space-y-3">
-                                <div class="flex justify-between items-center">
-                                    <span class="text-gray-300">Rebotes</span>
-                                    <span class="text-white font-medium">${stat.rebounds || 0}</span>
-                                </div>
-                                <div class="flex justify-between items-center">
-                                    <span class="text-gray-300">Assistências</span>
-                                    <span class="text-white font-medium">${stat.assists || 0}</span>
-                                </div>
-                                <div class="flex justify-between items-center">
-                                    <span class="text-gray-300">Roubos</span>
-                                    <span class="text-white font-medium">${stat.steals || 0}</span>
-                                </div>
-                                <div class="flex justify-between items-center">
-                                    <span class="text-gray-300">Tocos</span>
-                                    <span class="text-white font-medium">${stat.blocks || 0}</span>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <!-- Erros -->
-                        <div class="bg-gray-800/60 p-5 rounded-xl border border-gray-700/50">
-                            <h4 class="text-gray-400 text-sm font-medium uppercase tracking-wider mb-4">Erros</h4>
-                            <div class="space-y-3">
-                                <div class="flex justify-between items-center">
-                                    <span class="text-gray-300">Perdas de Bola</span>
-                                    <span class="text-white font-medium">${stat.turnovers || 0}</span>
-                                </div>
-                                <div class="flex justify-between items-center">
-                                    <span class="text-gray-300">Faltas</span>
-                                    <span class="text-white font-medium">${stat.fouls || 0}</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="px-6 py-4 border-t border-gray-800 bg-gray-900/50">
-                    <div class="flex justify-end space-x-3">
-                        <button onclick="this.closest('.fixed').remove()" class="px-5 py-2.5 text-gray-300 hover:bg-gray-800/50 rounded-xl transition-all border border-gray-700/50">
-                            Fechar
-                        </button>
-                        <button onclick="this.closest('.fixed').remove(); editStat('${stat.id}')" class="px-5 py-2.5 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 text-white rounded-xl transition-all">
-                            Editar Estatística
-                        </button>
-                    </div>
-                </div>
-            </div>
-        `;
-        
-        document.body.appendChild(modal);
-        
-    } catch (error) {
-        console.error('Erro ao carregar detalhes:', error);
-        alert('Erro ao carregar detalhes da estatística');
-    }
+// Edit stat
+function editStat(statId) {
+    // Implementation for editing a stat
+    console.log('Edit stat:', statId);
 }
 
-async function editStat(statId) {
-    try {
-        const response = await fetch(`/api/player-stats/${currentPlayerId}`);
-        if (!response.ok) throw new Error('Erro ao carregar estatísticas');
-        
-        const stats = await response.json();
-        const stat = stats.find(s => s.id == statId);
-        
-        if (!stat) {
-            alert('Estatística não encontrada');
-            return;
-        }
-        
-        currentStatId = statId;
-        
-        document.getElementById('game_date').value = stat.game_date;
-        document.getElementById('adverse_team').value = stat.adverse_team || '';
-        document.getElementById('minutes_played').value = stat.minutes_played || '';
-        document.getElementById('field_goals_made').value = stat.field_goals_made || '';
-        document.getElementById('field_goals_attempted').value = stat.field_goals_attempted || '';
-        document.getElementById('three_points_made').value = stat.three_points_made || '';
-        document.getElementById('three_points_attempted').value = stat.three_points_attempted || '';
-        document.getElementById('free_throws_made').value = stat.free_throws_made || '';
-        document.getElementById('free_throws_attempted').value = stat.free_throws_attempted || '';
-        document.getElementById('rebounds').value = stat.rebounds || '';
-        document.getElementById('assists').value = stat.assists || '';
-        document.getElementById('steals').value = stat.steals || '';
-        document.getElementById('blocks').value = stat.blocks || '';
-        document.getElementById('turnovers').value = stat.turnovers || '';
-        document.getElementById('fouls').value = stat.fouls || '';
-        
-        updatePercentage('field_goals_made', 'field_goals_attempted', 'fg_percentage');
-        updatePercentage('three_points_made', 'three_points_attempted', 'three_pt_percentage');
-        updatePercentage('free_throws_made', 'free_throws_attempted', 'ft_percentage');
-        
-        openAddStatsModal();
-        
-    } catch (error) {
-        console.error('Erro ao carregar estatística para edição:', error);
-        alert('Erro ao carregar estatística para edição');
-    }
-}
-
+// Delete stat
 function deleteStat(statId) {
     currentStatId = statId;
     showDeleteModal();
 }
 
+// Show delete confirmation modal
 function showDeleteModal() {
     const modal = document.getElementById('delete-modal');
     const modalContent = document.getElementById('delete-modal-content');
     
     if (modal && modalContent) {
+        // Show modal
         modal.classList.remove('hidden');
         document.body.style.overflow = 'hidden';
         
+        // Trigger animation
         setTimeout(() => {
             modalContent.classList.remove('opacity-0', 'scale-95');
             modalContent.classList.add('opacity-100', 'scale-100');
@@ -961,31 +786,37 @@ function showDeleteModal() {
     }
 }
 
+// Hide delete confirmation modal
 function hideDeleteModal() {
     const modal = document.getElementById('delete-modal');
     const modalContent = document.getElementById('delete-modal-content');
     
     if (modal && modalContent) {
+        // Start fade out animation
         modalContent.classList.remove('opacity-100', 'scale-100');
         modalContent.classList.add('opacity-0', 'scale-95');
         
+        // Remove all event listeners to prevent memory leaks
         const newModal = modal.cloneNode(true);
         modal.parentNode.replaceChild(newModal, modal);
         
+        // Wait for animation to complete before hiding
         setTimeout(() => {
             newModal.classList.add('hidden');
             document.body.style.overflow = '';
             
+            // Return focus to the element that triggered the delete
             const deleteButton = document.querySelector(`[onclick*="deleteStat('${currentStatId}')"]`);
             if (deleteButton) {
                 deleteButton.focus();
             }
-        }, 200);
+        }, 200); // Match this with your CSS transition duration
     }
     
     currentStatId = null;
 }
 
+// Handle delete confirmation
 async function handleDeleteConfirm() {
     if (!currentStatId || !currentPlayerId) return;
     
@@ -999,10 +830,13 @@ async function handleDeleteConfirm() {
             throw new Error(error.message || 'Error deleting stat');
         }
         
+        // Reload stats
         await loadPlayerStats(currentPlayerId);
         
+        // Hide modal
         hideDeleteModal();
         
+        // Show success message
         alert('Stat deleted successfully!');
         
     } catch (error) {
@@ -1011,11 +845,13 @@ async function handleDeleteConfirm() {
     }
 }
 
+// Open add stats modal
 function openAddStatsModal() {
     const modal = document.getElementById('add-stats-modal');
     const modalContent = document.getElementById('addStatsModalContent');
     if (!modal || !modalContent) return;
     
+    // Get selected player
     const playerSelect = document.getElementById('player-select');
     if (!playerSelect || !playerSelect.value) {
         alert('Por favor, selecione um jogador primeiro.');
@@ -1024,6 +860,7 @@ function openAddStatsModal() {
     
     const selectedOption = playerSelect.options[playerSelect.selectedIndex];
     
+    // Update player info in modal
     const playerName = document.getElementById('player-name-modal');
     const playerNumber = document.getElementById('player-number-modal');
     const playerTeam = document.getElementById('player-team-modal');
@@ -1038,56 +875,72 @@ function openAddStatsModal() {
         playerAvatar.style.background = teamColors[selectedOption.dataset.teamName] || teamColors['Default'];
     }
     
-    if (statsForm && !currentStatId) {
+    // Reset form
+    if (statsForm) {
         statsForm.reset();
         
+        // Set today's date
         const today = new Date().toISOString().split('T')[0];
         const gameDateInput = document.getElementById('game_date');
         if (gameDateInput) {
             gameDateInput.value = today;
         }
         
+        // Set player ID in form
         const playerIdInput = document.getElementById('player_id');
         if (playerIdInput) {
             playerIdInput.value = playerSelect.value;
         }
         
+        // Reset percentages and points
         updatePercentage('field_goals_made', 'field_goals_attempted', 'fg_percentage');
         updatePercentage('three_points_made', 'three_points_attempted', 'three_pt_percentage');
         updatePercentage('free_throws_made', 'free_throws_attempted', 'ft_percentage');
         calculateTotalPoints();
     }
     
+    // Reset state
+    currentStatId = null;
+    
+    // Show modal with animation
     modal.classList.remove('hidden');
     document.body.style.overflow = 'hidden';
     
+    // Trigger animation
     setTimeout(() => {
         modalContent.classList.remove('opacity-0', 'scale-95');
         modalContent.classList.add('opacity-100', 'scale-100');
     }, 10);
     
+    // Update percentages on modal open
     updatePercentage('field_goals_made', 'field_goals_attempted', 'fg_percentage');
     updatePercentage('three_points_made', 'three_points_attempted', 'three_pt_percentage');
     updatePercentage('free_throws_made', 'free_throws_attempted', 'ft_percentage');
     
+    // Get all focusable elements in the modal
     const focusableElements = 'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])';
     const focusableContent = modal.querySelectorAll(focusableElements);
     
+    // Get first and last focusable elements
     const firstFocusableElement = focusableContent[0];
     const lastFocusableElement = focusableContent[focusableContent.length - 1];
     
+    // Focus first element
     if (firstFocusableElement) {
         setTimeout(() => firstFocusableElement.focus(), 100);
     }
     
+    // Handle tab key to trap focus inside modal
     modal.addEventListener('keydown', function trapTabKey(e) {
         if (e.key === 'Tab') {
             if (e.shiftKey) {
+                // Shift + Tab: if first element, move to last
                 if (document.activeElement === firstFocusableElement) {
                     e.preventDefault();
                     lastFocusableElement.focus();
                 }
             } else {
+                // Tab: if last element, move to first
                 if (document.activeElement === lastFocusableElement) {
                     e.preventDefault();
                     firstFocusableElement.focus();
@@ -1095,6 +948,7 @@ function openAddStatsModal() {
             }
         } else if (e.key === 'Escape') {
             hideAddModal();
+            // Return focus to the element that had focus before opening the modal
             if (previousActiveElement) {
                 previousActiveElement.focus();
             }
@@ -1102,23 +956,25 @@ function openAddStatsModal() {
     });
 }
 
+// Hide add stats modal
 function hideAddModal() {
     const modal = document.getElementById('add-stats-modal');
     const modalContent = document.getElementById('addStatsModalContent');
     
     if (modal && modalContent) {
+        // Start fade out animation
         modalContent.classList.remove('opacity-100', 'scale-100');
         modalContent.classList.add('opacity-0', 'scale-95');
         
+        // Wait for animation to complete before hiding
         setTimeout(() => {
             modal.classList.add('hidden');
             document.body.style.overflow = '';
             
+            // Reset form when modal is fully hidden
             if (statsForm) {
                 statsForm.reset();
             }
-            
-            currentStatId = null;
-        }, 200);
+        }, 200); // Match this with your CSS transition duration
     }
 }
