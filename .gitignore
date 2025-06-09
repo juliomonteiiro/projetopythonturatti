@@ -14,8 +14,8 @@ env/
 *.log
 
 # Diretórios e arquivos específicos do Flask
-instance/
 migrations/
+*.sqlite3
 
 # IDEs e editores
 .vscode/

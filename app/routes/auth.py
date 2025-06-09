@@ -38,22 +38,29 @@ def register():
         password = request.form.get('password')
         confirm_password = request.form.get('confirm_password')
 
+        if not all([name, username, email, password, confirm_password]):
+            flash('Por favor, preencha todos os campos.', 'warning')
+            return render_template('auth/register.html', hide_nav=True, title='Registrar')
+
         if password != confirm_password:
             flash('As senhas não coincidem. Tente novamente.', 'danger')
-        else:
-            existing_user = User.query.filter((User.username == username) | (User.email == email)).first()
-            if existing_user:
-                if existing_user.username == username:
-                    flash('Nome de usuário já em uso. Escolha outro.', 'danger')
-                else:
-                    flash('E-mail já cadastrado. Use outro e-mail ou faça login.', 'danger')
+            return render_template('auth/register.html', hide_nav=True, title='Registrar')
+
+        existing_user = User.query.filter((User.username == username) | (User.email == email)).first()
+        if existing_user:
+            if existing_user.username == username:
+                flash('Nome de usuário já em uso. Escolha outro.', 'danger')
             else:
-                hashed_password = generate_password_hash(password, method='sha256')
-                new_user = User(name=name, username=username, email=email, password_hash=hashed_password)
-                db.session.add(new_user)
-                db.session.commit()
-                flash('Registro realizado com sucesso! Faça login para continuar.', 'success')
-                return redirect(url_for('auth.login'))
+                flash('E-mail já cadastrado. Use outro e-mail ou faça login.', 'danger')
+            return render_template('auth/register.html', hide_nav=True, title='Registrar')
+
+        hashed_password = generate_password_hash(password, method='pbkdf2:sha256')
+        new_user = User(name=name, username=username, email=email, password_hash=hashed_password)
+        db.session.add(new_user)
+        db.session.commit()
+
+        flash('Registro realizado com sucesso! Faça login para continuar.', 'success')
+        return redirect(url_for('auth.login'))
 
     return render_template('auth/register.html', hide_nav=True, title='Registrar')
 
