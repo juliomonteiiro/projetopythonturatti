@@ -1,1 +1,1 @@
-from app.routes import auth, players, statistics, home
+from app.routes import auth, players, statistics, main

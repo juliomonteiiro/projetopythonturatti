@@ -1,0 +1,128 @@
+{% extends "base.html" %}
+
+{% block title %}BasketStats - Home{% endblock %}
+
+{% block head %}
+<style>
+  .auth-container {
+    min-height: calc(100vh - 8rem);
+  }
+  .card {
+    border: none;
+    border-radius: 1rem;
+    overflow: hidden;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+  .card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+  }
+  .custom-toast {
+    max-width: 350px;
+    border: none;
+    border-radius: 0.5rem;
+    overflow: hidden;
+    opacity: 0.95;
+  }
+  .toast-success {
+    background-color: #10b981;
+  }
+  .toast-error {
+    background-color: #ef4444;
+  }
+  .toast-warning {
+    background-color: #f59e0b;
+  }
+  .toast-info {
+    background-color: #3b82f6;
+  }
+  .toast-content {
+    display: flex;
+    align-items: center;
+    padding: 1rem;
+  }
+  .toast-icon {
+    margin-right: 0.75rem;
+    font-size: 1.25rem;
+  }
+  .toast-message {
+    color: white;
+    flex-grow: 1;
+  }
+  .close-btn {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    color: white;
+    opacity: 0.8;
+  }
+  .close-btn:hover {
+    opacity: 1;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<main class="flex-grow w-full px-4 py-6">
+  <section class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-12 gap-4 h-full">
+    <div class="col-span-12 grid grid-cols-1 md:grid-cols-3 lg:grid-cols-12 gap-4 md:gap-6">
+      
+      <div class="col-span-12 lg:col-span-3">
+        <a href="{{ url_for('main.stats') }}" class="group block transform transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] rounded-xl shadow-lg border overflow-hidden h-full min-h-[200px] md:min-h-[250px] bg-gradient-to-br from-[#0F9B0F] to-[#38EF7D] text-white border-[#0F9B0F]">
+          <div class="relative h-full w-full flex">
+            <div class="flex items-center p-4 w-1/2"><h2 class="text-2xl font-bold">Stats</h2></div>
+            <div class="relative h-full w-full"><img src="{{ url_for('static', filename='images/stats-player.png') }}" alt="Stats" class="w-full h-full object-cover object-center"/></div>
+          </div>
+        </a>
+      </div>
+      
+      <a href="#" class="bg-gradient-to-b from-[#3E3E3E] to-[#121212] text-white border-none rounded-xl shadow-lg overflow-hidden transform transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] h-full min-h-[200px] md:min-h-[250px] transition-colors col-span-12 lg:col-span-6">
+        <div class="h-full flex flex-col justify-center items-center p-4">
+          <div class="flex items-center mb-6"><h2 class="text-2xl font-bold text-center">Last Game</h2></div>
+          <div class="flex justify-center w-full items-center">
+            <div class="flex flex-col items-center mx-8">
+              <div class="w-20 h-20 rounded-full bg-white p-1 shadow-md"><img src="{{ url_for('static', filename='images/celtics.png') }}" alt="Celtics" class="w-full h-full object-contain" /></div>
+              <span class="text-base font-bold mt-2">CELTICS</span><span class="text-sm mt-1 opacity-80">(64-18)</span>
+            </div>
+            <div class="text-center mx-12 flex flex-col">
+              <div class="text-4xl font-bold mb-2">235 - 45</div><div class="text-xs opacity-70">May 15, 2025</div>
+            </div>
+            <div class="flex flex-col items-center mx-8">
+              <div class="w-20 h-20 rounded-full bg-white p-1 shadow-md"><img src="{{ url_for('static', filename='images/lakers.png') }}" alt="Lakers" class="w-full h-full object-contain" /></div>
+              <span class="text-base font-bold mt-2">LAKERS</span><span class="text-sm mt-1 opacity-80">(49-37)</span>
+            </div>
+          </div>
+        </div>
+      </a>
+
+      <div class="col-span-12 lg:col-span-3">
+        <a href="#" class="group block transform transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] rounded-xl shadow-lg border overflow-hidden h-full min-h-[200px] md:min-h-[250px] bg-gradient-to-br from-[#E65100] to-[#FF7043] text-white border-[#E65100]">
+          <div class="relative h-full w-full flex">
+            <div class="flex items-center p-4 w-1/2"><h2 class="text-2xl font-bold">PlayBook</h2></div>
+            <div class="relative h-full w-1/2"><img src="{{ url_for('static', filename='images/playbook.png') }}" alt="PlayBook" class="w-full h-full object-cover object-center"/></div>
+          </div>
+        </a>
+      </div>
+
+      <div class="col-span-12 lg:col-span-6">
+        <a href="{{ url_for('main.team') }}" class="group block transform transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] rounded-xl shadow-lg border overflow-hidden h-full min-h-[200px] md:min-h-[250px] bg-gradient-to-br from-[#D9001A] to-[#FF223C] text-white border-[#D9001A]">
+          <div class="relative h-full w-full flex">
+            <div class="flex items-center p-4 w-1/2"><h2 class="text-2xl font-bold">The Team</h2></div>
+            <div class="relative h-full w-full"><img src="{{ url_for('static', filename='images/team-player.png') }}" alt="The Team" class="w-full h-full object-cover object-center"/></div>
+          </div>
+        </a>
+      </div>
+
+      <div class="col-span-12 lg:col-span-6">
+        <a href="#" class="group block transform transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] rounded-xl shadow-lg border overflow-hidden h-full min-h-[200px] md:min-h-[250px] bg-purple-500 text-white border-[#4A00E0]">
+          <div class="relative h-full w-full flex">
+            <div class="flex items-center p-4 w-1/2"><h2 class="text-2xl font-bold">Schedule</h2></div>
+            <div class="relative h-full w-1/2"><img src="{{ url_for('static', filename='images/calendar.png') }}" alt="Schedule" class="w-full h-full object-cover object-center"/></div>
+          </div>
+        </a>
+      </div>
+
+    </div>
+  </section>
+</main>
+{% endblock %}

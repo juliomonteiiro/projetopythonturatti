@@ -1,7 +1,7 @@
 from flask import Flask, Response
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
-from flask_login import LoginManager
+from flask_login import LoginManager, login_required
 from dotenv import load_dotenv
 import os
 
@@ -30,11 +30,18 @@ def create_app():
         response.expires = 0
         return response
 
-    from app.routes import auth, players, statistics, home
+    from app.routes import auth, players, statistics, main
     app.register_blueprint(auth.bp)
     app.register_blueprint(players.bp)
     app.register_blueprint(statistics.bp)
-    app.register_blueprint(home.bp)
+    app.register_blueprint(main.bp, url_prefix='')
+    
+    # Rota raiz redireciona para a página inicial principal
+    @app.route('/')
+    @login_required
+    def index():
+        from flask import redirect, url_for
+        return redirect(url_for('main.home'))
 
     return app
 

@@ -1,0 +1,359 @@
+{% extends "base.html" %}
+
+{% block title %}Team - BasketStats{% endblock %}
+
+{% block head %}
+{{ super() }}
+<script>
+    window.addEventListener('error', function(e) {
+        console.error('Erro ao carregar recurso:', e.filename, e.lineno, e.colno, e.message);
+    }, true);
+</script>
+<script src="{{ url_for('static', filename='js/team.js') }}" defer onerror="console.error('Erro ao carregar o script team.js')"></script>
+{% endblock %}
+
+{% block content %}
+<!-- Modal para adicionar/editar jogador -->
+<div id="playerModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+    <div class="bg-gray-800 rounded-lg p-6 w-full max-w-lg shadow-2xl">
+        <div class="flex justify-between items-center mb-6">
+            <h3 class="text-2xl font-bold text-white" id="modalTitle">Adicionar Jogador</h3>
+            <button onclick="window.teamApp.closeModal()" class="text-gray-400 hover:text-white transition-colors">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
+        </div>
+        <form id="playerForm" class="space-y-5">
+            <input type="hidden" id="playerId" name="id">
+            
+            <!-- Nome -->
+            <div>
+                <label for="name" class="block text-sm font-medium text-gray-300 mb-2">Nome Completo</label>
+                <input type="text" id="name" name="name" required
+                       class="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors">
+            </div>
+            
+            <!-- Idade e Número -->
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label for="age" class="block text-sm font-medium text-gray-300 mb-2">Idade</label>
+                    <input type="number" id="age" name="age" required min="18" max="45"
+                           class="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors">
+                </div>
+                <div>
+                    <label for="number" class="block text-sm font-medium text-gray-300 mb-2">Número</label>
+                    <input type="number" id="number" name="number" required min="0" max="99"
+                           class="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors">
+                </div>
+            </div>
+            
+            <!-- Posição e Time -->
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label for="position" class="block text-sm font-medium text-gray-300 mb-2">Posição</label>
+                    <select id="position" name="position" required
+                            class="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors">
+                        <option value="">Selecione...</option>
+                        <option value="PG">PG - Armador</option>
+                        <option value="SG">SG - Ala-armador</option>
+                        <option value="SF">SF - Ala</option>
+                        <option value="PF">PF - Ala-pivô</option>
+                        <option value="C">C - Pivô</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="team" class="block text-sm font-medium text-gray-300 mb-2">Time NBA</label>
+                    <select id="team" name="team" required
+                            class="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors">
+                        <option value="">Selecione um time...</option>
+                        <!-- Conferência Leste -->
+                        <optgroup label="Conferência Leste">
+                            <option value="Atlanta Hawks">Atlanta Hawks</option>
+                            <option value="Boston Celtics">Boston Celtics</option>
+                            <option value="Brooklyn Nets">Brooklyn Nets</option>
+                            <option value="Charlotte Hornets">Charlotte Hornets</option>
+                            <option value="Chicago Bulls">Chicago Bulls</option>
+                            <option value="Cleveland Cavaliers">Cleveland Cavaliers</option>
+                            <option value="Detroit Pistons">Detroit Pistons</option>
+                            <option value="Indiana Pacers">Indiana Pacers</option>
+                            <option value="Miami Heat">Miami Heat</option>
+                            <option value="Milwaukee Bucks">Milwaukee Bucks</option>
+                            <option value="New York Knicks">New York Knicks</option>
+                            <option value="Orlando Magic">Orlando Magic</option>
+                            <option value="Philadelphia 76ers">Philadelphia 76ers</option>
+                            <option value="Toronto Raptors">Toronto Raptors</option>
+                            <option value="Washington Wizards">Washington Wizards</option>
+                        </optgroup>
+                        <!-- Conferência Oeste -->
+                        <optgroup label="Conferência Oeste">
+                            <option value="Dallas Mavericks">Dallas Mavericks</option>
+                            <option value="Denver Nuggets">Denver Nuggets</option>
+                            <option value="Golden State Warriors">Golden State Warriors</option>
+                            <option value="Houston Rockets">Houston Rockets</option>
+                            <option value="Los Angeles Clippers">Los Angeles Clippers</option>
+                            <option value="Los Angeles Lakers">Los Angeles Lakers</option>
+                            <option value="Memphis Grizzlies">Memphis Grizzlies</option>
+                            <option value="Minnesota Timberwolves">Minnesota Timberwolves</option>
+                            <option value="New Orleans Pelicans">New Orleans Pelicans</option>
+                            <option value="Oklahoma City Thunder">Oklahoma City Thunder</option>
+                            <option value="Phoenix Suns">Phoenix Suns</option>
+                            <option value="Portland Trail Blazers">Portland Trail Blazers</option>
+                            <option value="Sacramento Kings">Sacramento Kings</option>
+                            <option value="San Antonio Spurs">San Antonio Spurs</option>
+                            <option value="Utah Jazz">Utah Jazz</option>
+                        </optgroup>
+                    </select>
+                </div>
+            </div>
+            
+            <!-- Altura e Peso -->
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label for="height" class="block text-sm font-medium text-gray-300 mb-2">Altura (m)</label>
+                    <input type="number" id="height" name="height" step="0.01" min="1.60" max="2.30" required
+                           placeholder="Ex: 1.98"
+                           class="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors">
+                </div>
+                <div>
+                    <label for="weight" class="block text-sm font-medium text-gray-300 mb-2">Peso (kg)</label>
+                    <input type="number" id="weight" name="weight" step="0.1" min="70" max="150" required
+                           placeholder="Ex: 85.5"
+                           class="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors">
+                </div>
+            </div>
+            
+            <div class="flex justify-end space-x-3 pt-6">
+                <button type="button" onclick="window.teamApp.closeModal()"
+                        class="px-6 py-3 text-sm font-medium text-gray-300 bg-gray-700 rounded-lg hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors">
+                    Cancelar
+                </button>
+                <button type="submit" id="submitBtn"
+                        class="px-6 py-3 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors">
+                    <span id="submitText">Salvar</span>
+                    <div id="submitLoader" class="hidden inline-flex items-center">
+                        <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        Salvando...
+                    </div>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div id="viewPlayerModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 hidden transition-opacity duration-300 p-4">
+    <div class="bg-gray-900/95 border border-gray-700/50 rounded-2xl w-full max-w-2xl mx-4 overflow-hidden transform transition-all duration-300 scale-95 opacity-0 shadow-2xl flex flex-col max-h-[90vh]" id="viewModalContent">
+        <div class="modal-header px-6 pt-6 pb-4 border-b border-gray-800">
+            <div class="flex justify-between items-start w-full">
+                <div class="flex-1">
+                    <div class="flex items-center gap-3 mb-2">
+                        <div class="w-4 h-4 rounded-full bg-blue-500"></div>
+                        <span id="viewPlayerTeam" class="text-blue-400 text-sm font-medium"></span>
+                    </div>
+                    <h3 class="text-3xl font-bold text-white mb-1" id="viewPlayerName"></h3>
+                    <div class="flex items-center gap-2">
+                        <span id="viewPlayerPosition" class="text-white/80 text-sm font-medium bg-black/30 px-3 py-1 rounded-full"></span>
+                        <span class="text-gray-500">•</span>
+                        <span id="viewPlayerAge" class="text-gray-400 text-sm"></span>
+                    </div>
+                </div>
+                <button onclick="window.teamApp.closeViewModal()" class="text-gray-400 hover:text-white transition-colors p-1 -mt-1 -mr-2">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        
+        <div class="overflow-y-auto flex-1 px-6 py-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                <div class="bg-gray-800/60 p-5 rounded-xl border border-gray-700/50">
+                    <h4 class="text-gray-400 text-sm font-medium uppercase tracking-wider mb-4">Estatísticas</h4>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="bg-gray-900/50 p-3 rounded-lg border border-gray-700/50 hover:border-blue-500/30 transition-colors group">
+                            <p class="text-gray-400 text-xs font-medium uppercase tracking-wider mb-1">Altura</p>
+                            <p id="viewPlayerHeight" class="text-white font-bold text-xl group-hover:text-blue-400 transition-colors">-</p>
+                        </div>
+                        <div class="bg-gray-900/50 p-3 rounded-lg border border-gray-700/50 hover:border-blue-500/30 transition-colors group">
+                            <p class="text-gray-400 text-xs font-medium uppercase tracking-wider mb-1">Peso</p>
+                            <p id="viewPlayerWeight" class="text-white font-bold text-xl group-hover:text-blue-400 transition-colors">-</p>
+                        </div>
+                        <div class="bg-gray-900/50 p-3 rounded-lg border border-gray-700/50 hover:border-blue-500/30 transition-colors group">
+                            <p class="text-gray-400 text-xs font-medium uppercase tracking-wider mb-1">Número</p>
+                            <p id="viewPlayerNumber" class="text-white font-bold text-2xl group-hover:text-blue-400 transition-colors">-</p>
+                        </div>
+                        <div class="bg-gray-900/50 p-3 rounded-lg border border-gray-700/50 hover:border-blue-500/30 transition-colors group">
+                            <p class="text-gray-400 text-xs font-medium uppercase tracking-wider mb-1">Time</p>
+                            <p id="viewPlayerTeamName" class="text-white font-medium text-sm group-hover:text-blue-400 transition-colors truncate">-</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-gray-800/60 p-5 rounded-xl border border-gray-700/50">
+                    <h4 class="text-gray-400 text-sm font-medium uppercase tracking-wider mb-4">Detalhes</h4>
+                    <div class="space-y-4">
+                        <div class="flex items-center justify-between pb-3 border-b border-gray-800">
+                            <span class="text-gray-400 text-sm">Posição Principal</span>
+                            <span id="viewPlayerMainPosition" class="text-white font-medium">-</span>
+                        </div>
+                        <div class="flex items-center justify-between pb-3 border-b border-gray-800">
+                            <span class="text-gray-400 text-sm">Idade</span>
+                            <span id="viewPlayerAgeDetail" class="text-white font-medium">-</span>
+                        </div>
+                        <div class="flex items-center justify-between pb-3 border-b border-gray-800">
+                            <span class="text-gray-400 text-sm">Data de Cadastro</span>
+                            <span id="viewPlayerCreatedAt" class="text-white font-medium">-</span>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-gray-400 text-sm">Status</span>
+                            <span class="px-2 py-1 text-xs font-medium bg-green-900/30 text-green-400 rounded-full">Ativo</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-gray-800/60 p-5 rounded-xl border border-gray-700/50 mb-6">
+                <h4 class="text-gray-400 text-sm font-medium uppercase tracking-wider mb-4">Estatísticas na Temporada</h4>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div class="text-center p-3 bg-gray-900/30 rounded-lg">
+                        <p class="text-gray-400 text-xs font-medium mb-1">Jogos</p>
+                        <p class="text-white font-bold text-xl">0</p>
+                    </div>
+                    <div class="text-center p-3 bg-gray-900/30 rounded-lg">
+                        <p class="text-gray-400 text-xs font-medium mb-1">Pontos</p>
+                        <p class="text-white font-bold text-xl">0.0</p>
+                    </div>
+                    <div class="text-center p-3 bg-gray-900/30 rounded-lg">
+                        <p class="text-gray-400 text-xs font-medium mb-1">Rebotes</p>
+                        <p class="text-white font-bold text-xl">0.0</p>
+                    </div>
+                    <div class="text-center p-3 bg-gray-900/30 rounded-lg">
+                        <p class="text-gray-400 text-xs font-medium mb-1">Assistências</p>
+                        <p class="text-white font-bold text-xl">0.0</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="px-6 py-4 border-t border-gray-800 bg-gray-900/50">
+            <div class="flex flex-col sm:flex-row justify-between gap-3">
+                <button onclick="window.teamApp.deletePlayer()" class="px-5 py-2.5 text-red-400 hover:bg-red-900/20 rounded-xl transition-all flex items-center justify-center border border-red-900/50 hover:border-red-800/70 hover:shadow-lg hover:shadow-red-900/10">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                    </svg>
+                    Excluir Jogador
+                </button>
+                <div class="flex flex-col sm:flex-row gap-3">
+                    <button onclick="window.teamApp.closeViewModal()" class="px-5 py-2.5 text-gray-300 hover:bg-gray-800/50 rounded-xl transition-all border border-gray-700/50 hover:border-gray-600/70 hover:shadow-lg hover:shadow-gray-900/10">
+                        Fechar
+                    </button>
+                    <button onclick="window.teamApp.editCurrentPlayer()" class="px-5 py-2.5 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 text-white rounded-xl transition-all flex items-center justify-center hover:shadow-lg hover:shadow-blue-900/20">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                        </svg>
+                        Editar Perfil
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="flex items-center justify-between m-10">
+    <a href="{{ url_for('main.home') }}" class="hover:opacity-80 transition-opacity">
+        <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="m12 19-7-7 7-7"/>
+            <path d="M19 12H5"/>
+        </svg>
+    </a>
+    <button onclick="window.teamApp.openAddModal()" class="px-6 py-3 bg-blue-600 text-white font-bold text-lg rounded-md shadow-md hover:bg-blue-700 transition-colors">
+        + Novo Jogador
+    </button>
+</div>
+
+<div id="playersContainer" class="pb-10">
+    <div class="flex justify-center items-center h-64">
+        <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+    </div>
+</div>
+
+<div id="deleteConfirmationModal" class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 hidden">
+    <div class="bg-gray-800 rounded-xl p-6 w-full max-w-md mx-4">
+        <div class="text-center">
+            <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 mb-4">
+                <svg class="h-6 w-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+            </div>
+            <h3 class="text-lg font-medium text-white mb-2" id="deleteConfirmationTitle">Excluir Jogador</h3>
+            <p class="text-gray-300 mb-6" id="deleteConfirmationMessage">Tem certeza que deseja excluir este jogador? Esta ação não pode ser desfeita.</p>
+            
+            <div class="flex justify-center space-x-3">
+                <button type="button" id="cancelDeleteBtn" 
+                        class="px-4 py-2 text-sm font-medium text-gray-300 bg-gray-700 rounded-md hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-colors">
+                    Cancelar
+                </button>
+                <button type="button" id="confirmDeleteBtn" 
+                        class="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors flex items-center">
+                    <span id="deleteButtonText">Excluir</span>
+                    <div id="deleteSpinner" class="spinner hidden ml-2">
+                        <svg class="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                    </div>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+console.log('Bloco de scripts do template team.html carregado');
+
+window.onerror = function(message, source, lineno, colno, error) {
+    console.error('Erro global capturado:', { message, source, lineno, colno, error });
+    return false;
+};
+
+document.addEventListener('DOMContentLoaded', () => {
+    console.log('Página de times carregada');
+
+    const deleteModal = document.getElementById('deleteConfirmationModal');
+    if (deleteModal) {
+        deleteModal.addEventListener('click', (e) => {
+            if (e.target === deleteModal) {
+                deleteModal.classList.add('hidden');
+                document.body.classList.remove('overflow-hidden');
+            }
+        });
+
+        const cancelBtn = document.getElementById('cancelDeleteBtn');
+        if (cancelBtn) {
+            cancelBtn.addEventListener('click', () => {
+                deleteModal.classList.add('hidden');
+                document.body.classList.remove('overflow-hidden');
+            });
+        }
+    }
+    
+    if (window.teamApp && window.teamApp.loadPlayers) {
+        window.teamApp.loadPlayers();
+    }
+});
+
+document.addEventListener('click', function(event) {
+    const modal = document.getElementById('playerModal');
+    if (event.target === modal) {
+        window.teamApp.closeModal();
+    }
+});
+</script>
+{% endblock %}
