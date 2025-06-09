@@ -232,6 +232,7 @@ async function loadPlayerStats(playerId) {
         
         const stats = await response.json();
         updateStatsTable(stats);
+        updatePlayerAverages(stats);
         
         if (playerStatsSection) {
             playerStatsSection.classList.remove('hidden');
@@ -243,6 +244,42 @@ async function loadPlayerStats(playerId) {
             playerStatsSection.classList.add('hidden');
         }
     }
+}
+
+function updatePlayerAverages(stats) {
+    if (!Array.isArray(stats) || stats.length === 0) {
+        document.getElementById('last-pts').textContent = '-';
+        document.getElementById('last-reb').textContent = '-';
+        document.getElementById('last-ast').textContent = '-';
+        document.getElementById('last-stl').textContent = '-';
+        document.getElementById('last-blk').textContent = '-';
+        
+        document.getElementById('avg-pts').textContent = '-';
+        document.getElementById('avg-reb').textContent = '-';
+        document.getElementById('avg-ast').textContent = '-';
+        document.getElementById('avg-stl').textContent = '-';
+        document.getElementById('avg-blk').textContent = '-';
+        return;
+    }
+
+    const lastGame = stats[0];
+    document.getElementById('last-pts').textContent = lastGame.points || '0';
+    document.getElementById('last-reb').textContent = lastGame.rebounds || '0';
+    document.getElementById('last-ast').textContent = lastGame.assists || '0';
+    document.getElementById('last-stl').textContent = lastGame.steals || '0';
+    document.getElementById('last-blk').textContent = lastGame.blocks || '0';
+
+    const avgPoints = (stats.reduce((sum, stat) => sum + (stat.points || 0), 0) / stats.length).toFixed(1);
+    const avgRebounds = (stats.reduce((sum, stat) => sum + (stat.rebounds || 0), 0) / stats.length).toFixed(1);
+    const avgAssists = (stats.reduce((sum, stat) => sum + (stat.assists || 0), 0) / stats.length).toFixed(1);
+    const avgSteals = (stats.reduce((sum, stat) => sum + (stat.steals || 0), 0) / stats.length).toFixed(1);
+    const avgBlocks = (stats.reduce((sum, stat) => sum + (stat.blocks || 0), 0) / stats.length).toFixed(1);
+
+    document.getElementById('avg-pts').textContent = avgPoints;
+    document.getElementById('avg-reb').textContent = avgRebounds;
+    document.getElementById('avg-ast').textContent = avgAssists;
+    document.getElementById('avg-stl').textContent = avgSteals;
+    document.getElementById('avg-blk').textContent = avgBlocks;
 }
 
 function updateStatsTable(stats) {
@@ -272,19 +309,18 @@ function updateStatsTable(stats) {
     
     stats.forEach(stat => {
         const row = document.createElement('tr');
-        row.className = 'hover:bg-white/5 transition';
+        row.className = 'hover:bg-white/5 transition cursor-pointer';
         row.id = `stat-${stat.id}`;
-        
-        const fgPct = calculatePercentage(stat.field_goals_made, stat.field_goals_attempted);
-        const threePtPct = calculatePercentage(stat.three_points_made, stat.three_points_attempted);
-        const ftPct = calculatePercentage(stat.free_throws_made, stat.free_throws_attempted);
         
         row.innerHTML = `
             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-white">
-                ${formatDate(stat.game_date)}
+                <div class="flex flex-col">
+                    <span class="font-semibold">${formatDate(stat.game_date)}</span>
+                    <span class="text-xs text-gray-400">vs ${stat.adverse_team}</span>
+                </div>
             </td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-center text-white">
-                ${stat.points || '0'}
+                <span class="font-bold text-lg">${stat.points || '0'}</span>
             </td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-center text-white">
                 ${stat.rebounds || '0'}
@@ -300,7 +336,13 @@ function updateStatsTable(stats) {
             </td>
             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                 <div class="flex items-center justify-center space-x-2">
-                    <button onclick="editStat('${stat.id}')" class="text-blue-500 hover:text-blue-400 p-1.5 rounded-full hover:bg-blue-500/10 transition-colors" title="Editar">
+                    <button onclick="viewStatDetails('${stat.id}')" class="text-blue-500 hover:text-blue-400 p-1.5 rounded-full hover:bg-blue-500/10 transition-colors" title="Ver detalhes">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                        </svg>
+                    </button>
+                    <button onclick="editStat('${stat.id}')" class="text-yellow-500 hover:text-yellow-400 p-1.5 rounded-full hover:bg-yellow-500/10 transition-colors" title="Editar">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                         </svg>
@@ -704,8 +746,199 @@ async function handleFormSubmit(e) {
     }
 }
 
-function editStat(statId) {
-    console.log('Edit stat:', statId);
+async function viewStatDetails(statId) {
+    try {
+        const response = await fetch(`/api/player-stats/${currentPlayerId}`);
+        if (!response.ok) throw new Error('Erro ao carregar estatísticas');
+        
+        const stats = await response.json();
+        const stat = stats.find(s => s.id == statId);
+        
+        if (!stat) {
+            alert('Estatística não encontrada');
+            return;
+        }
+        
+        const modal = document.createElement('div');
+        modal.className = 'fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4';
+        modal.innerHTML = `
+            <div class="bg-gray-900/95 border border-gray-700/50 rounded-2xl w-full max-w-4xl mx-4 overflow-hidden transform transition-all duration-300 shadow-2xl">
+                <div class="px-6 pt-6 pb-4 border-b border-gray-800">
+                    <div class="flex justify-between items-center">
+                        <h3 class="text-2xl font-bold text-white">Detalhes da Partida</h3>
+                        <button onclick="this.closest('.fixed').remove()" class="text-gray-400 hover:text-white transition-colors p-1">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                            </svg>
+                        </button>
+                    </div>
+                    <p class="text-gray-400 mt-1">${formatDate(stat.game_date)} vs ${stat.adverse_team}</p>
+                </div>
+                
+                <div class="p-6 max-h-[70vh] overflow-y-auto">
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <!-- Pontuação -->
+                        <div class="bg-gray-800/60 p-5 rounded-xl border border-gray-700/50">
+                            <h4 class="text-gray-400 text-sm font-medium uppercase tracking-wider mb-4">Pontuação</h4>
+                            <div class="space-y-3">
+                                <div class="flex justify-between items-center">
+                                    <span class="text-gray-300">Total de Pontos</span>
+                                    <span class="text-white font-bold text-xl">${stat.points || 0}</span>
+                                </div>
+                                <div class="flex justify-between items-center">
+                                    <span class="text-gray-300">Minutos Jogados</span>
+                                    <span class="text-white font-medium">${stat.minutes_played || 0}</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Arremessos de Quadra -->
+                        <div class="bg-gray-800/60 p-5 rounded-xl border border-gray-700/50">
+                            <h4 class="text-gray-400 text-sm font-medium uppercase tracking-wider mb-4">Arremessos de Quadra</h4>
+                            <div class="space-y-3">
+                                <div class="flex justify-between items-center">
+                                    <span class="text-gray-300">Convertidos/Tentados</span>
+                                    <span class="text-white font-medium">${stat.field_goals_made || 0}/${stat.field_goals_attempted || 0}</span>
+                                </div>
+                                <div class="flex justify-between items-center">
+                                    <span class="text-gray-300">Porcentagem</span>
+                                    <span class="text-white font-bold">${stat.field_goal_percentage || 0}%</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Arremessos de 3 Pontos -->
+                        <div class="bg-gray-800/60 p-5 rounded-xl border border-gray-700/50">
+                            <h4 class="text-gray-400 text-sm font-medium uppercase tracking-wider mb-4">Arremessos de 3 Pontos</h4>
+                            <div class="space-y-3">
+                                <div class="flex justify-between items-center">
+                                    <span class="text-gray-300">Convertidos/Tentados</span>
+                                    <span class="text-white font-medium">${stat.three_points_made || 0}/${stat.three_points_attempted || 0}</span>
+                                </div>
+                                <div class="flex justify-between items-center">
+                                    <span class="text-gray-300">Porcentagem</span>
+                                    <span class="text-white font-bold">${stat.three_point_percentage || 0}%</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Lances Livres -->
+                        <div class="bg-gray-800/60 p-5 rounded-xl border border-gray-700/50">
+                            <h4 class="text-gray-400 text-sm font-medium uppercase tracking-wider mb-4">Lances Livres</h4>
+                            <div class="space-y-3">
+                                <div class="flex justify-between items-center">
+                                    <span class="text-gray-300">Convertidos/Tentados</span>
+                                    <span class="text-white font-medium">${stat.free_throws_made || 0}/${stat.free_throws_attempted || 0}</span>
+                                </div>
+                                <div class="flex justify-between items-center">
+                                    <span class="text-gray-300">Porcentagem</span>
+                                    <span class="text-white font-bold">${stat.free_throw_percentage || 0}%</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Outras Estatísticas -->
+                        <div class="bg-gray-800/60 p-5 rounded-xl border border-gray-700/50">
+                            <h4 class="text-gray-400 text-sm font-medium uppercase tracking-wider mb-4">Outras Estatísticas</h4>
+                            <div class="space-y-3">
+                                <div class="flex justify-between items-center">
+                                    <span class="text-gray-300">Rebotes</span>
+                                    <span class="text-white font-medium">${stat.rebounds || 0}</span>
+                                </div>
+                                <div class="flex justify-between items-center">
+                                    <span class="text-gray-300">Assistências</span>
+                                    <span class="text-white font-medium">${stat.assists || 0}</span>
+                                </div>
+                                <div class="flex justify-between items-center">
+                                    <span class="text-gray-300">Roubos</span>
+                                    <span class="text-white font-medium">${stat.steals || 0}</span>
+                                </div>
+                                <div class="flex justify-between items-center">
+                                    <span class="text-gray-300">Tocos</span>
+                                    <span class="text-white font-medium">${stat.blocks || 0}</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Erros -->
+                        <div class="bg-gray-800/60 p-5 rounded-xl border border-gray-700/50">
+                            <h4 class="text-gray-400 text-sm font-medium uppercase tracking-wider mb-4">Erros</h4>
+                            <div class="space-y-3">
+                                <div class="flex justify-between items-center">
+                                    <span class="text-gray-300">Perdas de Bola</span>
+                                    <span class="text-white font-medium">${stat.turnovers || 0}</span>
+                                </div>
+                                <div class="flex justify-between items-center">
+                                    <span class="text-gray-300">Faltas</span>
+                                    <span class="text-white font-medium">${stat.fouls || 0}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="px-6 py-4 border-t border-gray-800 bg-gray-900/50">
+                    <div class="flex justify-end space-x-3">
+                        <button onclick="this.closest('.fixed').remove()" class="px-5 py-2.5 text-gray-300 hover:bg-gray-800/50 rounded-xl transition-all border border-gray-700/50">
+                            Fechar
+                        </button>
+                        <button onclick="this.closest('.fixed').remove(); editStat('${stat.id}')" class="px-5 py-2.5 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 text-white rounded-xl transition-all">
+                            Editar Estatística
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(modal);
+        
+    } catch (error) {
+        console.error('Erro ao carregar detalhes:', error);
+        alert('Erro ao carregar detalhes da estatística');
+    }
+}
+
+async function editStat(statId) {
+    try {
+        const response = await fetch(`/api/player-stats/${currentPlayerId}`);
+        if (!response.ok) throw new Error('Erro ao carregar estatísticas');
+        
+        const stats = await response.json();
+        const stat = stats.find(s => s.id == statId);
+        
+        if (!stat) {
+            alert('Estatística não encontrada');
+            return;
+        }
+        
+        currentStatId = statId;
+        
+        document.getElementById('game_date').value = stat.game_date;
+        document.getElementById('adverse_team').value = stat.adverse_team || '';
+        document.getElementById('minutes_played').value = stat.minutes_played || '';
+        document.getElementById('field_goals_made').value = stat.field_goals_made || '';
+        document.getElementById('field_goals_attempted').value = stat.field_goals_attempted || '';
+        document.getElementById('three_points_made').value = stat.three_points_made || '';
+        document.getElementById('three_points_attempted').value = stat.three_points_attempted || '';
+        document.getElementById('free_throws_made').value = stat.free_throws_made || '';
+        document.getElementById('free_throws_attempted').value = stat.free_throws_attempted || '';
+        document.getElementById('rebounds').value = stat.rebounds || '';
+        document.getElementById('assists').value = stat.assists || '';
+        document.getElementById('steals').value = stat.steals || '';
+        document.getElementById('blocks').value = stat.blocks || '';
+        document.getElementById('turnovers').value = stat.turnovers || '';
+        document.getElementById('fouls').value = stat.fouls || '';
+        
+        updatePercentage('field_goals_made', 'field_goals_attempted', 'fg_percentage');
+        updatePercentage('three_points_made', 'three_points_attempted', 'three_pt_percentage');
+        updatePercentage('free_throws_made', 'free_throws_attempted', 'ft_percentage');
+        
+        openAddStatsModal();
+        
+    } catch (error) {
+        console.error('Erro ao carregar estatística para edição:', error);
+        alert('Erro ao carregar estatística para edição');
+    }
 }
 
 function deleteStat(statId) {
@@ -805,7 +1038,7 @@ function openAddStatsModal() {
         playerAvatar.style.background = teamColors[selectedOption.dataset.teamName] || teamColors['Default'];
     }
     
-    if (statsForm) {
+    if (statsForm && !currentStatId) {
         statsForm.reset();
         
         const today = new Date().toISOString().split('T')[0];
@@ -824,8 +1057,6 @@ function openAddStatsModal() {
         updatePercentage('free_throws_made', 'free_throws_attempted', 'ft_percentage');
         calculateTotalPoints();
     }
-    
-    currentStatId = null;
     
     modal.classList.remove('hidden');
     document.body.style.overflow = 'hidden';
@@ -886,6 +1117,8 @@ function hideAddModal() {
             if (statsForm) {
                 statsForm.reset();
             }
+            
+            currentStatId = null;
         }, 200);
     }
 }
