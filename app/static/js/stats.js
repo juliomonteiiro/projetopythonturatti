@@ -216,7 +216,6 @@ function updatePlayerInfo(player) {
         emptyState.classList.add('hidden');
     }
     
-    // Set current player ID and load stats
     currentPlayerId = player.id;
     loadPlayerStats(player.id);
 }
@@ -324,13 +323,11 @@ function formatDate(dateString) {
     return new Date(dateString).toLocaleDateString('pt-BR', options);
 }
 
-// Calculate percentage
 function calculatePercentage(made, attempted) {
     if (!attempted || isNaN(made) || isNaN(attempted)) return '0.0';
     return (made / attempted * 100).toFixed(1);
 }
 
-// Calculate total points
 function calculateTotalPoints() {
     const fieldGoalsMade = parseInt(document.getElementById('field_goals_made')?.value) || 0;
     const threePointsMade = parseInt(document.getElementById('three_points_made')?.value) || 0;
@@ -346,7 +343,6 @@ function calculateTotalPoints() {
     return points;
 }
 
-// Update percentage field and points
 function updatePercentage(madeId, attemptedId, percentageId) {
     const madeElement = document.getElementById(madeId);
     const attemptedElement = document.getElementById(attemptedId);
@@ -367,7 +363,6 @@ function updatePercentage(madeId, attemptedId, percentageId) {
     calculateTotalPoints();
 }
 
-// Validate that 3-pointers don't exceed total field goals
 function validateThreePointers() {
     const threePointsMade = parseInt(document.getElementById('three_points_made')?.value) || 0;
     const fieldGoalsMade = parseInt(document.getElementById('field_goals_made')?.value) || 0;
@@ -378,7 +373,6 @@ function validateThreePointers() {
     }
 }
 
-// Set up event listeners for percentage calculation
 function setupPercentageListeners() {
     const percentageFields = [
         { made: 'field_goals_made', attempted: 'field_goals_attempted', percentage: 'field_goals_percentage' },
@@ -404,7 +398,6 @@ function setupPercentageListeners() {
         }
     });
     
-    // Free throws
     const ftMade = document.getElementById('free_throws_made');
     const ftAttempted = document.getElementById('free_throws_attempted');
     
@@ -414,9 +407,7 @@ function setupPercentageListeners() {
     }
 }
 
-// Set up event listeners
 function setupEventListeners() {
-    // Handle ESC key to close modals
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape') {
             const addModal = document.getElementById('add-stats-modal');
@@ -430,7 +421,6 @@ function setupEventListeners() {
         }
     });
     
-    // Player select change
     const playerSelect = document.getElementById('player-select');
     const playerSelectMobile = document.getElementById('player-select-mobile');
     const addStatsBtn = document.getElementById('add-stats-btn');
@@ -443,7 +433,6 @@ function setupEventListeners() {
         playerSelectMobile.addEventListener('change', handlePlayerSelect);
     }
     
-    // Add stats button click
     if (addStatsBtn) {
         addStatsBtn.addEventListener('click', () => {
             const playerSelect = document.getElementById('player-select');
@@ -455,18 +444,15 @@ function setupEventListeners() {
         });
     }
     
-    // Form submission
     if (statsForm) {
         statsForm.addEventListener('submit', handleFormSubmit);
     }
     
-    // Modal close buttons
     const closeButtons = document.querySelectorAll('.modal-close');
     closeButtons.forEach(button => {
         button.addEventListener('click', hideAddModal);
     });
     
-    // Close modals when clicking outside
     const addModal = document.getElementById('add-stats-modal');
     const deleteModal = document.getElementById('delete-modal');
     
@@ -477,7 +463,6 @@ function setupEventListeners() {
             }
         });
         
-        // Add ARIA attributes for accessibility
         addModal.setAttribute('role', 'dialog');
         addModal.setAttribute('aria-modal', 'true');
         addModal.setAttribute('aria-labelledby', 'add-stats-title');
@@ -490,37 +475,31 @@ function setupEventListeners() {
             }
         });
         
-        // Add ARIA attributes for accessibility
         deleteModal.setAttribute('role', 'alertdialog');
         deleteModal.setAttribute('aria-modal', 'true');
         deleteModal.setAttribute('aria-labelledby', 'delete-modal-title');
     }
     
-    // Delete confirmation
     const deleteConfirmBtn = document.getElementById('confirm-delete');
     if (deleteConfirmBtn) {
         deleteConfirmBtn.addEventListener('click', handleDeleteConfirm);
     }
     
-    // Cancel delete button
     const cancelDeleteBtn = document.getElementById('cancel-delete');
     if (cancelDeleteBtn) {
         cancelDeleteBtn.addEventListener('click', hideDeleteModal);
     }
     
-    // Cancel stats button
     const cancelStatsBtn = document.getElementById('cancel-stats');
     if (cancelStatsBtn) {
         cancelStatsBtn.addEventListener('click', hideAddModal);
     }
 }
 
-// Handle player select change
 function handlePlayerSelect(event) {
     const select = event.target;
     const selectedOption = select.options[select.selectedIndex];
     
-    // Update the other select to match
     const otherSelect = select.id === 'player-select' 
         ? document.getElementById('player-select-mobile') 
         : document.getElementById('player-select');
@@ -529,9 +508,7 @@ function handlePlayerSelect(event) {
         otherSelect.value = selectedOption ? selectedOption.value : '';
     }
     
-    // If no player is selected, clear the UI
     if (!selectedOption || !selectedOption.value) {
-        // Reset player info
         updatePlayerInfo({
             id: null,
             name: 'Selecione um jogador',
@@ -542,13 +519,11 @@ function handlePlayerSelect(event) {
             team_secondary_color: ''
         });
         
-        // Hide stats section
         const playerStatsSection = document.getElementById('player-stats-section');
         if (playerStatsSection) {
             playerStatsSection.classList.add('hidden');
         }
         
-        // Show empty state
         const emptyState = document.getElementById('empty-stats-state');
         if (emptyState) {
             emptyState.classList.add('hidden');
@@ -557,7 +532,6 @@ function handlePlayerSelect(event) {
         return;
     }
     
-    // Update player info
     const player = {
         id: selectedOption.value,
         name: selectedOption.text.split(' - ').slice(1).join(' - ').trim(),
@@ -572,8 +546,6 @@ function handlePlayerSelect(event) {
     loadPlayerStats(player.id);
 }
 
-// Handle form submission
-// Validate form field
 function validateField(fieldId, errorId, validationFn) {
     const field = document.getElementById(fieldId);
     const errorElement = document.getElementById(errorId);
@@ -595,11 +567,9 @@ function validateField(fieldId, errorId, validationFn) {
     }
 }
 
-// Validate all form fields
 function validateForm() {
     let isValid = true;
     
-    // Validate required fields
     isValid = validateField('adverse_team', 'adverse_team_error', value => value.trim() !== '') && isValid;
     isValid = validateField('minutes_played', 'minutes_played_error', value => {
         const num = parseInt(value);
@@ -612,9 +582,7 @@ function validateForm() {
 async function handleFormSubmit(e) {
     e.preventDefault();
     
-    // Validate form
     if (!validateForm()) {
-        // Scroll to first error
         const firstError = document.querySelector('.border-red-500');
         if (firstError) {
             firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -622,17 +590,14 @@ async function handleFormSubmit(e) {
         return;
     }
     
-    // Get player ID from form
     const playerIdInput = document.getElementById('player_id');
     if (!playerIdInput || !playerIdInput.value) {
         alert('Por favor, selecione um jogador primeiro.');
         return;
     }
     
-    // Ensure currentPlayerId is set
     currentPlayerId = playerIdInput.value;
     
-    // Show loading state
     const submitBtn = document.getElementById('submitBtn');
     const submitText = document.getElementById('submitText');
     const submitLoader = document.getElementById('submitLoader');
@@ -642,16 +607,13 @@ async function handleFormSubmit(e) {
     if (submitLoader) submitLoader.classList.remove('hidden');
     
     try {
-        // Get form data
         const formData = new FormData(statsForm);
         const data = {};
         
-        // Add player_id to form data if not present
         if (!formData.has('player_id') && currentPlayerId) {
             formData.append('player_id', currentPlayerId);
         }
         
-        // Convert FormData to object and validate required fields
         const requiredFields = [
             'game_date', 'adverse_team', 'minutes_played', 
             'field_goals_made', 'field_goals_attempted', 
@@ -661,7 +623,6 @@ async function handleFormSubmit(e) {
             'turnovers', 'fouls'
         ];
         
-        // Validate all required fields
         const missingFields = [];
         requiredFields.forEach(field => {
             const value = formData.get(field) || '';
@@ -672,12 +633,10 @@ async function handleFormSubmit(e) {
             }
         });
         
-        // Check for missing fields
         if (missingFields.length > 0) {
             throw new Error(`Os seguintes campos são obrigatórios: ${missingFields.join(', ')}`);
         }
         
-        // Validate numeric values
         const fgMade = parseInt(data.field_goals_made);
         const fgAttempted = parseInt(data.field_goals_attempted);
         const threeMade = parseInt(data.three_points_made);
@@ -697,26 +656,20 @@ async function handleFormSubmit(e) {
             throw new Error('Lances livres convertidos não podem ser maiores que tentados');
         }
         
-        // Calculate points based on stats
         data.points = (fgMade * 2) + (threeMade * 1) + ftMade;
         
-        // Add player ID to data
         data.player_id = playerIdInput.value;
         
-        // Add player ID
         data.player_id = currentPlayerId;
         
-        // Log data being sent for debugging
         console.log('Enviando dados para o servidor:', data);
         
-        // Determine if we're creating or updating
         const url = currentStatId 
             ? `/api/player-stats/${currentStatId}`
             : '/api/player-stats';
             
         const method = currentStatId ? 'PUT' : 'POST';
         
-        // Send request
         const response = await fetch(url, {
             method,
             headers: {
@@ -726,7 +679,6 @@ async function handleFormSubmit(e) {
             body: JSON.stringify(data)
         });
         
-        // Log response for debugging
         console.log('Resposta do servidor:', response);
         
         if (!response.ok) {
@@ -734,20 +686,16 @@ async function handleFormSubmit(e) {
             throw new Error(error.message || 'Error saving stats');
         }
         
-        // Reload stats
         await loadPlayerStats(currentPlayerId);
         
-        // Hide modal and reset form
         hideAddModal();
         
-        // Show success message
         alert(`Stats ${currentStatId ? 'updated' : 'added'} successfully!`);
         
     } catch (error) {
         console.error('Error saving stats:', error);
         alert(error.message || 'Error saving stats. Please try again.');
     } finally {
-        // Reset button state
         if (submitBtn) {
             submitBtn.disabled = false;
             if (submitText) submitText.classList.remove('hidden');
@@ -756,29 +704,23 @@ async function handleFormSubmit(e) {
     }
 }
 
-// Edit stat
 function editStat(statId) {
-    // Implementation for editing a stat
     console.log('Edit stat:', statId);
 }
 
-// Delete stat
 function deleteStat(statId) {
     currentStatId = statId;
     showDeleteModal();
 }
 
-// Show delete confirmation modal
 function showDeleteModal() {
     const modal = document.getElementById('delete-modal');
     const modalContent = document.getElementById('delete-modal-content');
     
     if (modal && modalContent) {
-        // Show modal
         modal.classList.remove('hidden');
         document.body.style.overflow = 'hidden';
         
-        // Trigger animation
         setTimeout(() => {
             modalContent.classList.remove('opacity-0', 'scale-95');
             modalContent.classList.add('opacity-100', 'scale-100');
@@ -786,37 +728,31 @@ function showDeleteModal() {
     }
 }
 
-// Hide delete confirmation modal
 function hideDeleteModal() {
     const modal = document.getElementById('delete-modal');
     const modalContent = document.getElementById('delete-modal-content');
     
     if (modal && modalContent) {
-        // Start fade out animation
         modalContent.classList.remove('opacity-100', 'scale-100');
         modalContent.classList.add('opacity-0', 'scale-95');
         
-        // Remove all event listeners to prevent memory leaks
         const newModal = modal.cloneNode(true);
         modal.parentNode.replaceChild(newModal, modal);
         
-        // Wait for animation to complete before hiding
         setTimeout(() => {
             newModal.classList.add('hidden');
             document.body.style.overflow = '';
             
-            // Return focus to the element that triggered the delete
             const deleteButton = document.querySelector(`[onclick*="deleteStat('${currentStatId}')"]`);
             if (deleteButton) {
                 deleteButton.focus();
             }
-        }, 200); // Match this with your CSS transition duration
+        }, 200);
     }
     
     currentStatId = null;
 }
 
-// Handle delete confirmation
 async function handleDeleteConfirm() {
     if (!currentStatId || !currentPlayerId) return;
     
@@ -830,13 +766,10 @@ async function handleDeleteConfirm() {
             throw new Error(error.message || 'Error deleting stat');
         }
         
-        // Reload stats
         await loadPlayerStats(currentPlayerId);
         
-        // Hide modal
         hideDeleteModal();
         
-        // Show success message
         alert('Stat deleted successfully!');
         
     } catch (error) {
@@ -845,13 +778,11 @@ async function handleDeleteConfirm() {
     }
 }
 
-// Open add stats modal
 function openAddStatsModal() {
     const modal = document.getElementById('add-stats-modal');
     const modalContent = document.getElementById('addStatsModalContent');
     if (!modal || !modalContent) return;
     
-    // Get selected player
     const playerSelect = document.getElementById('player-select');
     if (!playerSelect || !playerSelect.value) {
         alert('Por favor, selecione um jogador primeiro.');
@@ -860,7 +791,6 @@ function openAddStatsModal() {
     
     const selectedOption = playerSelect.options[playerSelect.selectedIndex];
     
-    // Update player info in modal
     const playerName = document.getElementById('player-name-modal');
     const playerNumber = document.getElementById('player-number-modal');
     const playerTeam = document.getElementById('player-team-modal');
@@ -875,72 +805,58 @@ function openAddStatsModal() {
         playerAvatar.style.background = teamColors[selectedOption.dataset.teamName] || teamColors['Default'];
     }
     
-    // Reset form
     if (statsForm) {
         statsForm.reset();
         
-        // Set today's date
         const today = new Date().toISOString().split('T')[0];
         const gameDateInput = document.getElementById('game_date');
         if (gameDateInput) {
             gameDateInput.value = today;
         }
         
-        // Set player ID in form
         const playerIdInput = document.getElementById('player_id');
         if (playerIdInput) {
             playerIdInput.value = playerSelect.value;
         }
         
-        // Reset percentages and points
         updatePercentage('field_goals_made', 'field_goals_attempted', 'fg_percentage');
         updatePercentage('three_points_made', 'three_points_attempted', 'three_pt_percentage');
         updatePercentage('free_throws_made', 'free_throws_attempted', 'ft_percentage');
         calculateTotalPoints();
     }
     
-    // Reset state
     currentStatId = null;
     
-    // Show modal with animation
     modal.classList.remove('hidden');
     document.body.style.overflow = 'hidden';
     
-    // Trigger animation
     setTimeout(() => {
         modalContent.classList.remove('opacity-0', 'scale-95');
         modalContent.classList.add('opacity-100', 'scale-100');
     }, 10);
     
-    // Update percentages on modal open
     updatePercentage('field_goals_made', 'field_goals_attempted', 'fg_percentage');
     updatePercentage('three_points_made', 'three_points_attempted', 'three_pt_percentage');
     updatePercentage('free_throws_made', 'free_throws_attempted', 'ft_percentage');
     
-    // Get all focusable elements in the modal
     const focusableElements = 'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])';
     const focusableContent = modal.querySelectorAll(focusableElements);
     
-    // Get first and last focusable elements
     const firstFocusableElement = focusableContent[0];
     const lastFocusableElement = focusableContent[focusableContent.length - 1];
     
-    // Focus first element
     if (firstFocusableElement) {
         setTimeout(() => firstFocusableElement.focus(), 100);
     }
     
-    // Handle tab key to trap focus inside modal
     modal.addEventListener('keydown', function trapTabKey(e) {
         if (e.key === 'Tab') {
             if (e.shiftKey) {
-                // Shift + Tab: if first element, move to last
                 if (document.activeElement === firstFocusableElement) {
                     e.preventDefault();
                     lastFocusableElement.focus();
                 }
             } else {
-                // Tab: if last element, move to first
                 if (document.activeElement === lastFocusableElement) {
                     e.preventDefault();
                     firstFocusableElement.focus();
@@ -948,7 +864,6 @@ function openAddStatsModal() {
             }
         } else if (e.key === 'Escape') {
             hideAddModal();
-            // Return focus to the element that had focus before opening the modal
             if (previousActiveElement) {
                 previousActiveElement.focus();
             }
@@ -956,25 +871,21 @@ function openAddStatsModal() {
     });
 }
 
-// Hide add stats modal
 function hideAddModal() {
     const modal = document.getElementById('add-stats-modal');
     const modalContent = document.getElementById('addStatsModalContent');
     
     if (modal && modalContent) {
-        // Start fade out animation
         modalContent.classList.remove('opacity-100', 'scale-100');
         modalContent.classList.add('opacity-0', 'scale-95');
         
-        // Wait for animation to complete before hiding
         setTimeout(() => {
             modal.classList.add('hidden');
             document.body.style.overflow = '';
             
-            // Reset form when modal is fully hidden
             if (statsForm) {
                 statsForm.reset();
             }
-        }, 200); // Match this with your CSS transition duration
+        }, 200);
     }
 }
